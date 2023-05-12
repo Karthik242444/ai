@@ -1,0 +1,47 @@
+mapper3:
+#!/usr/bin/python
+
+import sys
+
+# This function reads the input data and emits the front camera megapixels along with the phone model as key-value pair
+# if the front camera megapixels lies in the range of 7 to 13
+def mapper():
+    for line in sys.stdin:
+        # Split the line by comma
+        fields = line.strip().split(',')
+        # Check if the front camera megapixels lies in the range of 7 to 13
+        if fields[7] != '' and 7 <= float(fields[7]) <= 13:
+            # Emit the front camera megapixels along with the phone model as key-value pair
+            print(fields[0] + ',' + fields[7])
+
+
+
+reducer3:
+#!/usr/bin/python
+
+import sys
+
+# This function reads the mapper output and finds the top 10 phones with front camera megapixels
+# that lies in the range of 7 to 13
+def reducer():
+    # Initialize an empty dictionary to store the phone models and their front camera megapixels
+    phone_megapixels = {}
+    for line in sys.stdin:
+        # Split the line by comma and extract the phone model and front camera megapixels
+        fields = line.strip().split(',')
+        phone_model = fields[0]
+        megapixels = float(fields[1])
+        # Add the phone model and its front camera megapixels to the dictionary
+        if phone_model not in phone_megapixels:
+            phone_megapixels[phone_model] = megapixels
+        else:
+            phone_megapixels[phone_model] = max(phone_megapixels[phone_model], megapixels)
+    
+    # Sort the phone models by their front camera megapixels in descending order
+    sorted_phone_megapixels = sorted(phone_megapixels.items(), key=lambda x: x[1], reverse=True)
+    # Take the top 10 phone models with highest front camera megapixels
+    top_10 = sorted_phone_megapixels[:10]
+    
+    # Print the top 10 phones with front camera megapixels that lies in the range of 7 to 13
+    for phone in top_10:
+        print(phone[0])
