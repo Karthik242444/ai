@@ -1,0 +1,155 @@
+mapper1
+#!/usr/bin/python
+
+import sys
+
+# input comes from STDIN (standard input)
+for line in sys.stdin:
+    # remove leading and trailing whitespace
+    line = line.strip()
+    # split the line into words
+    phone_info = line.split(',')
+    if phone_info[2] == 'Yes':  # Checking if the phone has dual sim data
+        print('%s\t%s' % ('dual_sim_data', 1))
+
+reducer1
+#!/usr/bin/python
+
+import sys
+
+current_key = None
+current_count = 0
+
+# input comes from STDIN (standard input)
+for line in sys.stdin:
+    # remove leading and trailing whitespace
+    line = line.strip()
+    # parse the input we got from mapper.py
+    key, count = line.split('\t', 1)
+    # convert count (currently a string) to int
+    try:
+        count = int(count)
+    except ValueError:
+        # count was not a number, so silently ignore this line
+        continue
+    # this if-else block assumes that the input data is already sorted by key
+    if key == current_key:
+        current_count += count
+    else:
+        if current_key:
+            # write result to STDOUT
+            print('%s\t%s' % (current_key, current_count))
+        current_key = key
+        current_count = count
+# do not forget to output the last word if needed!
+if current_key == key:
+    print('%s\t%s' % (current_key, current_count))
+
+
+mapper2:
+#!/usr/bin/python
+
+import sys
+
+# input comes from STDIN (standard input)
+for line in sys.stdin:
+    # remove leading and trailing whitespace
+    line = line.strip()
+    # split the line into words
+    phone_info = line.split(',')
+    ram = int(phone_info[4])
+    if ram <= 2:
+        print('%s\t%s' % ('Price Range: Low', 1))
+    elif ram <= 4:
+        print('%s\t%s' % ('Price Range: Medium', 1))
+    else:
+        print('%s\t%s' % ('Price Range: High', 1))
+
+reducer2:
+#!/usr/bin/python
+
+import sys
+
+current_key = None
+current_count = 0
+
+# input comes from STDIN (standard input)
+for line in sys.stdin:
+    # remove leading and trailing whitespace
+    line = line.strip()
+    # parse the input we got from mapper.py
+    key, count = line.split('\t', 1)
+    # convert count (currently a string) to int
+    try:
+        count = int(count)
+    except ValueError:
+        # count was not a number, so silently ignore this line
+        continue
+    # this if-else block assumes that the input data is already sorted by key
+    if key == current_key:
+        current_count += count
+    else:
+        if current_key:
+            # write result to STDOUT
+            print('%s\t%s' % (current_key, current_count))
+        current_key = key
+        current_count = count
+# do not forget to output the last word if needed!
+if current_key == key:
+    print('%s\t%s' % (current_key, current_count))
+
+
+
+mapper3:
+#!/usr/bin/python
+
+import sys
+
+def mapper_top_10_front_camera(line):
+    phone_info = line.strip().split(',')
+    front_camera = int(phone_info[6])
+    if front_camera >= 7 and front_camera <= 13:  # Checking if the front camera megapixels lie in the range of 7 to 13
+        yield front_camera, phone_info[1]
+
+if __name__ == '__main__':
+    for line in sys.stdin:
+        for key, value in mapper_top_10_front_camera(line):
+            print(str(key) + '\t' + value)
+
+
+reducer3:
+#!/usr/bin/python
+
+import sys
+
+def reducer_top_10_front_camera(key, values):
+    phones = list(values)
+    phones.sort(reverse=True)  # Sorting the phones in descending order of front camera megapixels
+    for phone in phones[:10]:  # Selecting the top 10 phones
+        yield key, phone
+
+if __name__ == '__main__':
+    current_key = None
+    values = []
+    for line in sys.stdin:
+        key, value = line.strip().split('\t')
+        if current_key == key:
+            values.append(value)
+        else:
+            if current_key:
+                for key, value in reducer_top_10_front_camera(current_key, values):
+                    print(str(key) + '\t' + value)
+            current_key = key
+            values = [value]
+    if current_key == key:
+        for key, value in reducer_top_10_front_camera(current_key, values):
+            print(str(key) + '\t' + value)
+
+
+running::
+mapper:
+cat MobilePriceRange |python3 mapper1.py
+
+reducer:
+cat MobilePriceRange |python3 mapper1.py|sort|python3 reducer1.py
+
