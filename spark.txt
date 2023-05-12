@@ -1,0 +1,33 @@
+from pyspark import SparkContext
+
+# Create a SparkContext object
+sc = SparkContext("local", "Headphones Analysis")
+
+# Load the data from a text file
+data = sc.textFile("home/hdoop/Downloads/Flipkart Dataset.csv")
+
+# Split each line by comma and create a tuple
+# The tuple will have (Model, Company, Color, Type, Rating, NumRating, SellingPrice, MRP, Discount)
+headphones = data.map(lambda line: line.split(",")).map(lambda x: (x[0], x[1], x[2], x[3], float(x[4]), int(x[5]), float(x[6]), float(x[7]), float(x[8]))
+
+
+# i) Find the top 10 headphones with the highest rating and price.
+# Sort the headphones by rating and then by price
+top_10 = headphones.sortBy(lambda x: (-x[4], -x[6]))\
+                  .map(lambda x: (x[0], x[1], x[2], x[3], x[4], x[6]))\
+                  .take(10)
+
+# Print the top 10 headphones with highest rating and price
+print("Top 10 Headphones with Highest Rating and Price:")
+for headphone in top_10:
+    print(headphone)
+
+
+# ii) Find the total number of headphones sold, and the total revenue generated from the sales.
+# Calculate the total number of headphones sold and the total revenue generated
+total_sold = headphones.map(lambda x: x[5]).reduce(lambda x, y: x+y)
+total_revenue = headphones.map(lambda x: x[6]*(1-x[8]/100)*x[5]).reduce(lambda x, y: x+y)
+
+# Print the total number of headphones sold and total revenue generated
+print("Total Number of Headphones Sold:", total_sold)
+print("Total Revenue Generated:", total_revenue)
